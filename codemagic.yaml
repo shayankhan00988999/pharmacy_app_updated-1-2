@@ -1,0 +1,53 @@
+workflows:
+  android-workflow:
+    name: Pharmacy App Android Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      vars:
+        PACKAGE_NAME: "com.pharmacy.pharmacy_app"
+    scripts:
+      - name: Regenerate Android platform files
+        script: |
+          flutter create . --platforms=android --org com.pharmacy
+      - name: Set app display name
+        script: |
+          sed -i '' 's/android:label="[^"]*"/android:label="Student Pharma Centre"/' android/app/src/main/AndroidManifest.xml
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Generate custom app icon
+        script: |
+          dart run flutter_launcher_icons
+      - name: Build APK
+        script: |
+          flutter build apk --release
+    artifacts:
+      - build/app/outputs/**/*.apk
+
+  windows-workflow:
+    name: Pharmacy App Windows Build
+    max_build_duration: 60
+    instance_type: windows_x2
+    environment:
+      flutter: stable
+    scripts:
+      - name: Regenerate Windows platform files
+        script: |
+          flutter create . --platforms=windows
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Enable Windows desktop support
+        script: |
+          flutter config --enable-windows-desktop
+      - name: Build Windows release
+        script: |
+          flutter build windows --release
+      - name: Zip the release folder
+        script: |
+          cd build\windows\x64\runner\Release
+          7z a -r ..\StudentPharmaCentre-Windows.zip .\*
+    artifacts:
+      - build/windows/x64/runner/StudentPharmaCentre-Windows.zip
